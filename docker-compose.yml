@@ -1,0 +1,25 @@
+services:
+  fastq-api:
+    build: .
+    image: paired-fastq-ordering:1.0.0
+    container_name: paired-fastq-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - fastq-jobs-data:/data/jobs
+    environment:
+      FASTQ_JOBS_DIR: /data/jobs
+      FASTQ_MAX_WORKERS: "2"
+      FASTQ_INSERT_BATCH: "1000"
+      FASTQ_SQLITE_CACHE_KIB: "4096"
+      FASTQ_GZIP_LEVEL: "6"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4).status == 200 else 1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  fastq-jobs-data:
